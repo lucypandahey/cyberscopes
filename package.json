@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "capture:snapshots": "node scripts/capture-snapshots.mjs",
+    "capture:polnation": "node scripts/capture-polnation-detail.mjs",
     "build:mirror": "node scripts/build-mirror.mjs",
+    "build:polnation": "node scripts/build-polnation-detail.mjs",
     "dev": "python -m http.server 4173 --bind 127.0.0.1"
   },
   "devDependencies": {

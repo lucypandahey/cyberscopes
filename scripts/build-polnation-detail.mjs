@@ -93,6 +93,7 @@ ${head}
 (() => {
   const root = document.getElementById("__next");
   const style = document.getElementById("snapshot-css");
+  const homeUrl = "https://cyberscopes.uk/";
   const pick = () => window.innerWidth <= 800 ? "snapshot-mobile" : "snapshot-desktop";
   let active = "";
   let toastTimer = 0;
@@ -126,6 +127,31 @@ ${head}
       input.remove();
     }
     showCopyToast();
+  };
+  const wireHomeNavigation = () => {
+    const setHomeLink = (el) => {
+      if (!el) return;
+      el.setAttribute("href", homeUrl);
+      el.removeAttribute("target");
+      el.removeAttribute("rel");
+    };
+
+    for (const el of root.querySelectorAll("header a")) {
+      setHomeLink(el);
+      el.dataset.homeRedirect = "true";
+    }
+
+    for (const el of root.querySelectorAll("header button")) {
+      el.dataset.homeRedirect = "true";
+    }
+
+    for (const el of root.querySelectorAll('nav[aria-label="Breadcrumb"] a')) {
+      const label = (el.textContent || "").replace(/\\s+/g, " ").trim();
+      if (label === "Home" || label === "Audits") {
+        setHomeLink(el);
+        el.dataset.homeRedirect = "true";
+      }
+    }
   };
   const drawRadarCharts = () => {
     const preferredOrder = ["Security", "Vitals", "Market", "Decentralization", "Fundamentals"];
@@ -231,10 +257,18 @@ ${head}
     active = next;
     style.textContent = document.getElementById(next.replace("snapshot", "css")).content.textContent;
     root.innerHTML = document.getElementById(next).innerHTML;
+    wireHomeNavigation();
     requestAnimationFrame(drawRadarCharts);
   };
   render();
   root.addEventListener("click", (event) => {
+    const homeControl = event.target.closest("[data-home-redirect='true']");
+    if (homeControl) {
+      event.preventDefault();
+      window.location.href = homeUrl;
+      return;
+    }
+
     const button = event.target.closest("button");
     if (!button) return;
     const copyIcon = button.querySelector('img[alt="Copy"]');

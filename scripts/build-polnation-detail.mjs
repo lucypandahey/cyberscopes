@@ -62,6 +62,24 @@ ${head}
 <style>
   template{display:none!important}
   .dropdown__StyledRelativeBox-sc-77781fc3-1:hover .dropdown__StyledDropdownContainer-sc-f41f1f99-0{display:flex}
+  .copy-toast{
+    position:fixed;
+    left:50%;
+    bottom:32px;
+    z-index:9999;
+    transform:translate(-50%,16px);
+    border:1px solid rgba(14,201,172,.55);
+    border-radius:8px;
+    background:rgba(2,27,55,.96);
+    color:#fff;
+    font:600 14px/1.2 Arial,sans-serif;
+    padding:10px 16px;
+    box-shadow:0 12px 36px rgba(0,0,0,.35);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  .copy-toast.is-visible{opacity:1;transform:translate(-50%,0)}
 </style>
 <style id="snapshot-css"></style>
 </head>
@@ -77,6 +95,38 @@ ${head}
   const style = document.getElementById("snapshot-css");
   const pick = () => window.innerWidth <= 800 ? "snapshot-mobile" : "snapshot-desktop";
   let active = "";
+  let toastTimer = 0;
+  const showCopyToast = () => {
+    let toast = document.querySelector(".copy-toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.className = "copy-toast";
+      toast.setAttribute("role", "status");
+      toast.setAttribute("aria-live", "polite");
+      toast.textContent = "copied";
+      document.body.appendChild(toast);
+    }
+    clearTimeout(toastTimer);
+    requestAnimationFrame(() => toast.classList.add("is-visible"));
+    toastTimer = setTimeout(() => toast.classList.remove("is-visible"), 1400);
+  };
+  const copyText = async (value) => {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      const input = document.createElement("textarea");
+      input.value = value;
+      input.setAttribute("readonly", "");
+      input.style.position = "fixed";
+      input.style.opacity = "0";
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      input.remove();
+    }
+    showCopyToast();
+  };
   const drawRadarCharts = () => {
     const preferredOrder = ["Security", "Vitals", "Market", "Decentralization", "Fundamentals"];
     for (const wrapper of document.querySelectorAll('[class*="radar__RadarWrapper"]')) {
@@ -184,6 +234,16 @@ ${head}
     requestAnimationFrame(drawRadarCharts);
   };
   render();
+  root.addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+    const copyIcon = button.querySelector('img[alt="Copy"]');
+    const titledAddress = button.querySelector("span[title]");
+    if (!copyIcon && !titledAddress) return;
+    event.preventDefault();
+    const value = titledAddress?.getAttribute("title") || titledAddress?.textContent?.trim();
+    copyText(value);
+  });
   let timer = 0;
   window.addEventListener("resize", () => {
     clearTimeout(timer);

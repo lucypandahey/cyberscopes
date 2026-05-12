@@ -4,6 +4,10 @@ import { chromium } from "playwright";
 const TARGET = "https://www.cyberscope.io/audits/moonmoon";
 const OUT = "reference/polnation-detail";
 const POLNATION_LOGO = "/assets/polnation-logo.png";
+const OLD_CONTRACT_ADDRESS = "0x3ed378b04e920024f473a28443ac350412e25c7f";
+const OLD_CONTRACT_SHORT = "0x3ed3..25c7f";
+const POLNATION_CONTRACT_ADDRESS = "0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae";
+const POLNATION_CONTRACT_SHORT = "0x3Ef3..Dd9Ae";
 
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -12,6 +16,8 @@ function escapeRegex(value) {
 function applyTextReplacements(value) {
   if (!value) return value;
   const replacements = [
+    [new RegExp(escapeRegex(OLD_CONTRACT_ADDRESS), "gi"), POLNATION_CONTRACT_ADDRESS],
+    [new RegExp(escapeRegex(OLD_CONTRACT_SHORT), "gi"), POLNATION_CONTRACT_SHORT],
     [new RegExp(escapeRegex("moonmoontoken.com"), "gi"), "polnation.com"],
     [/MoonMoonTheMeme/g, "Polnation"],
     [/Moon Moon/g, "Polnation"],
@@ -32,6 +38,8 @@ async function customizePage(page) {
     const applyTextReplacements = (value) => {
       if (!value) return value;
       return value
+        .replace(/0x3ed378b04e920024f473a28443ac350412e25c7f/gi, "0x3Ef3D8bA38EBe18DB133cEc108f4D14CE00Dd9Ae")
+        .replace(/0x3ed3\.\.25c7f/gi, "0x3Ef3..Dd9Ae")
         .replace(/moonmoontoken\.com/gi, "polnation.com")
         .replace(/MoonMoonTheMeme/g, "Polnation")
         .replace(/Moon Moon/g, "Polnation")

@@ -7218,6 +7218,10 @@ code > span, .linenumber { color: rgb(68, 68, 68); }
   const style = document.getElementById("snapshot-css");
   const homeUrl = "https://cyberscopes.uk/";
   const pick = () => window.innerWidth <= 800 ? "snapshot-mobile" : "snapshot-desktop";
+  const polnationScores = {
+    Fundamentals: 74,
+    Vitals: 67
+  };
   let active = "";
   let toastTimer = 0;
   const textOf = (el) => (el?.textContent || "").replace(/\s+/g, " ").trim();
@@ -7273,6 +7277,31 @@ code > span, .linenumber { color: rgb(68, 68, 68); }
       el.removeAttribute("href");
       el.removeAttribute("target");
       el.removeAttribute("rel");
+    }
+  };
+  const setFirstPercentAfterLabel = (section, label, value) => {
+    const elements = Array.from(section.querySelectorAll("*"));
+    const labelIndex = elements.findIndex((el) => textOf(el) === label);
+    if (labelIndex < 0) return;
+
+    for (const el of elements.slice(labelIndex + 1)) {
+      if (/^\d+%$/.test(textOf(el))) {
+        el.textContent = value + "%";
+        return;
+      }
+    }
+  };
+  const updatePolnationScores = () => {
+    for (const [name, value] of Object.entries(polnationScores)) {
+      for (const wrapper of root.querySelectorAll('[class*="radar__LabelTextWrapper"]')) {
+        if (textOf(wrapper.querySelector("h3")) === name) {
+          const score = wrapper.querySelector("span");
+          if (score) score.textContent = value + "%";
+        }
+      }
+
+      const section = root.querySelector("#" + name.toLowerCase());
+      if (section) setFirstPercentAfterLabel(section, "Score", value);
     }
   };
   const wireHomeNavigation = () => {
@@ -7407,6 +7436,7 @@ code > span, .linenumber { color: rgb(68, 68, 68); }
     removeContactAndTelegram();
     wireHomeNavigation();
     disableDropdownLinks();
+    updatePolnationScores();
     requestAnimationFrame(drawRadarCharts);
   };
   render();

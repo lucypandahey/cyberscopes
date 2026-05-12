@@ -106,9 +106,8 @@ async function customizePage(page) {
       }
     }
 
-    for (const label of Array.from(document.querySelectorAll(".radar__LabelTextWrapper-sc-62a2447a-0"))) {
-      if (text(label).startsWith("Market")) removeElement(label);
-    }
+    // Keep the top summary radar's Market metric. The detailed Market section is
+    // removed above, but the original score overview uses five axes.
   }, { logo: POLNATION_LOGO });
 }
 

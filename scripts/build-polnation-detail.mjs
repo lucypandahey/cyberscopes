@@ -138,6 +138,10 @@ ${head}
       }
     }
 
+    for (const el of root.querySelectorAll('a[href*="t.me/"], img[alt*="Telegram" i]')) {
+      (el.closest("a") || el).remove();
+    }
+
     for (const el of root.querySelectorAll('[class*="sticky__ContainerButton"]')) {
       (el.closest(".fixed") || el.parentElement || el).remove();
     }

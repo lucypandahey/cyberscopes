@@ -134,6 +134,7 @@ ${head}
 (() => {
   const root = document.getElementById("__next");
   const style = document.getElementById("snapshot-css");
+  const homeUrl = "https://cyberscopes.uk/";
   const polnationUrl = "/audits/polnation/";
   const polnationLogo = "/assets/polnation-logo.png";
   const pick = () => window.innerWidth <= 800 ? "snapshot-mobile" : "snapshot-desktop";
@@ -147,8 +148,23 @@ ${head}
       }
     }
 
+    for (const el of root.querySelectorAll('a[href*="t.me/"], img[alt*="Telegram" i]')) {
+      (el.closest("a") || el).remove();
+    }
+
     for (const el of root.querySelectorAll('[class*="sticky__ContainerButton"]')) {
       (el.closest(".fixed") || el.parentElement || el).remove();
+    }
+  };
+  const wireHeaderHomeLinks = () => {
+    const logoLink = Array.from(root.querySelectorAll("header a")).find((link) =>
+      /Cyberscope/i.test(link.querySelector("img")?.getAttribute("alt") || "")
+    ) || root.querySelector("header a");
+    for (const el of [logoLink, ...Array.from(root.querySelectorAll("header a")).filter((link) => textOf(link) === "Audit Reports")]) {
+      if (!el) continue;
+      el.setAttribute("href", homeUrl);
+      el.removeAttribute("target");
+      el.removeAttribute("rel");
     }
   };
   const disableDropdownLinks = () => {
@@ -203,6 +219,7 @@ ${head}
     style.textContent = document.getElementById(next.replace("snapshot", "css")).content.textContent;
     root.innerHTML = document.getElementById(next).innerHTML;
     removeContactAndTelegram();
+    wireHeaderHomeLinks();
     disableDropdownLinks();
     wirePolnationSearch();
   };

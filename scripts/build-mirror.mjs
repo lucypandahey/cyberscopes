@@ -11,25 +11,49 @@ const desktopCssPath = new URL("../reference/css-desktop.css", import.meta.url);
 const mobileCssPath = new URL("../reference/css-mobile.css", import.meta.url);
 const outputPath = new URL("../index.html", import.meta.url);
 const auditsOutputPath = new URL("../audits/index.html", import.meta.url);
+const POLNATION_LOGO = "/assets/polnation-logo.png";
+const LOCAL_ROOT_PATHS = [
+  "assets/polnation-logo.png",
+  "audits/polnation",
+  "audits/polnation/"
+];
+const LOCAL_ROOT_PATTERN = LOCAL_ROOT_PATHS.map((path) => path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
 
 function rewriteUrls(markup) {
+  const localRootPath = new RegExp(`^/(${LOCAL_ROOT_PATTERN})(?:[?#].*)?$`);
+
   let html = markup.replace(
-    /\b(href|src|poster|action)=("|')\/(?!\/)/g,
-    `$1=$2${ORIGIN}/`
+    /\b(href|src|poster|action)=("|')\/(?!\/)([^"']*)/g,
+    (match, attr, quote, path) => {
+      const value = `/${path}`;
+      return localRootPath.test(value) ? match : `${attr}=${quote}${ORIGIN}${value}`;
+    }
   );
 
   html = html.replace(/\b(srcset|srcSet)=("|')([^"']+)\2/g, (match, name, quote, value) => {
-    const rewritten = value.replace(
-      /(^|,\s*)\/(?!\/)/g,
-      `$1${ORIGIN}/`
-    );
+    const rewritten = value.replace(/(^|,\s*)\/(?!\/)([^,\s]+)/g, (item, prefix, path) => {
+      const url = `/${path}`;
+      return localRootPath.test(url) ? item : `${prefix}${ORIGIN}${url}`;
+    });
     return `${name}=${quote}${rewritten}${quote}`;
   });
 
   return html.replace(
-    /url\((["']?)\/(?!\/)/g,
-    `url($1${ORIGIN}/`
+    /url\((["']?)\/(?!\/)([^)"']+)/g,
+    (match, quote, path) => {
+      const value = `/${path}`;
+      return localRootPath.test(value) ? match : `url(${quote}${ORIGIN}${value}`;
+    }
   );
+}
+
+function customizePolnationProject(markup) {
+  return markup
+    .replace(/\/audits\/moonmoon/g, "/audits/polnation/")
+    .replace(/Moon Moon/g, "Polnation")
+    .replace(/\balt=(["'])Polnation\1([^>]*?)\bsrcset=(["'])[^"']*1777323501819_686022d9-0a83-4763-9dea-6d62540e72d5[^"']*\3/g, `alt=$1Polnation$1$2srcset=$3${POLNATION_LOGO} 1x, ${POLNATION_LOGO} 2x$3`)
+    .replace(/\bsrcset=(["'])[^"']*1777323501819_686022d9-0a83-4763-9dea-6d62540e72d5[^"']*\1/g, `srcset=$1${POLNATION_LOGO} 1x, ${POLNATION_LOGO} 2x$1`)
+    .replace(/\bsrc=(["'])[^"']*1777323501819_686022d9-0a83-4763-9dea-6d62540e72d5[^"']*\1/g, `src=$1${POLNATION_LOGO}$1`);
 }
 
 function stripScripts(markup) {
@@ -44,15 +68,14 @@ const desktopHead = readFileSync(desktopHeadPath, "utf8");
 const mobileHead = readFileSync(mobileHeadPath, "utf8");
 let head = stripScripts(rewriteUrls([sourceHead, desktopHead, mobileHead].join("\n")));
 
-const desktop = stripScripts(rewriteUrls(readFileSync(desktopPath, "utf8")));
-const mobile = stripScripts(rewriteUrls(readFileSync(mobilePath, "utf8")));
+const desktop = stripScripts(rewriteUrls(customizePolnationProject(readFileSync(desktopPath, "utf8"))));
+const mobile = stripScripts(rewriteUrls(customizePolnationProject(readFileSync(mobilePath, "utf8"))));
 const desktopCss = rewriteUrls(readFileSync(desktopCssPath, "utf8"));
 const mobileCss = rewriteUrls(readFileSync(mobileCssPath, "utf8"));
 
 const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
-<base href="${ORIGIN}/">
 ${head}
 <meta name="robots" content="noindex,nofollow">
 <style>

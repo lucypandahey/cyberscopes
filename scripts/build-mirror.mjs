@@ -81,6 +81,8 @@ ${head}
 <style>
   template{display:none!important}
   .dropdown__StyledRelativeBox-sc-77781fc3-1:hover .dropdown__StyledDropdownContainer-sc-f41f1f99-0{display:flex}
+  [data-disabled-dropdown-link="true"]{cursor:default}
+  [class*="sticky__ContainerButton"]{display:none!important}
   .polnation-search-results{
     position:absolute;
     left:0;
@@ -137,6 +139,26 @@ ${head}
   const pick = () => window.innerWidth <= 800 ? "snapshot-mobile" : "snapshot-desktop";
   let active = "";
   const normalize = (value) => (value || "").trim().toLowerCase().replace(/\\s+/g, "");
+  const textOf = (el) => (el?.textContent || "").replace(/\\s+/g, " ").trim();
+  const removeContactAndTelegram = () => {
+    for (const el of root.querySelectorAll("a, button")) {
+      if (textOf(el) === "Contact Us") {
+        (el.closest("li") || el).remove();
+      }
+    }
+
+    for (const el of root.querySelectorAll('[class*="sticky__ContainerButton"]')) {
+      (el.closest(".fixed") || el.parentElement || el).remove();
+    }
+  };
+  const disableDropdownLinks = () => {
+    for (const el of root.querySelectorAll('[class*="dropdown__StyledRelativeBox"] > a, [class*="dropdown__StyledDropdownContainer"] a')) {
+      el.dataset.disabledDropdownLink = "true";
+      el.removeAttribute("href");
+      el.removeAttribute("target");
+      el.removeAttribute("rel");
+    }
+  };
   const wirePolnationSearch = () => {
     const input = root.querySelector('input[placeholder="Search project, contract or wallet"]');
     if (!input) return;
@@ -180,10 +202,17 @@ ${head}
     active = next;
     style.textContent = document.getElementById(next.replace("snapshot", "css")).content.textContent;
     root.innerHTML = document.getElementById(next).innerHTML;
+    removeContactAndTelegram();
+    disableDropdownLinks();
     wirePolnationSearch();
   };
   render();
   root.addEventListener("click", (event) => {
+    if (event.target.closest('[data-disabled-dropdown-link="true"]')) {
+      event.preventDefault();
+      return;
+    }
+
     const button = event.target.closest('button[title^="Scroll"]');
     if (!button) return;
     const stack = button.closest(".scrollable__StyledStack-sc-2609468f-0");

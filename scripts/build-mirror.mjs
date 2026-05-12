@@ -81,6 +81,44 @@ ${head}
 <style>
   template{display:none!important}
   .dropdown__StyledRelativeBox-sc-77781fc3-1:hover .dropdown__StyledDropdownContainer-sc-f41f1f99-0{display:flex}
+  .polnation-search-results{
+    position:absolute;
+    left:0;
+    right:0;
+    top:calc(100% + 8px);
+    z-index:5000;
+    display:none;
+    border:1px solid rgba(255,255,255,.32);
+    border-radius:14px;
+    background:#001f43;
+    box-shadow:0 18px 40px rgba(0,0,0,.32);
+    overflow:hidden;
+  }
+  .polnation-search-results.is-visible{display:block}
+  .polnation-search-result{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    width:100%;
+    min-height:58px;
+    padding:12px 18px;
+    color:#fff;
+    text-decoration:none;
+    font:700 16px/1.2 Arial,sans-serif;
+    background:transparent;
+    border:0;
+    cursor:pointer;
+    text-align:left;
+  }
+  .polnation-search-result:hover,
+  .polnation-search-result:focus{background:rgba(14,201,172,.12);outline:none}
+  .polnation-search-result img{
+    width:34px;
+    height:34px;
+    border-radius:8px;
+    object-fit:contain;
+    flex:0 0 auto;
+  }
 </style>
 <style id="snapshot-css"></style>
 </head>
@@ -94,14 +132,55 @@ ${head}
 (() => {
   const root = document.getElementById("__next");
   const style = document.getElementById("snapshot-css");
+  const polnationUrl = "/audits/polnation/";
+  const polnationLogo = "/assets/polnation-logo.png";
   const pick = () => window.innerWidth <= 800 ? "snapshot-mobile" : "snapshot-desktop";
   let active = "";
+  const normalize = (value) => (value || "").trim().toLowerCase().replace(/\\s+/g, "");
+  const wirePolnationSearch = () => {
+    const input = root.querySelector('input[placeholder="Search project, contract or wallet"]');
+    if (!input) return;
+
+    const container = input.closest(".StyledTextInput__StyledTextInputContainer-sc-1x30a0s-1") || input.parentElement;
+    if (!container) return;
+    container.style.position = "relative";
+
+    let results = container.querySelector(".polnation-search-results");
+    if (!results) {
+      results = document.createElement("div");
+      results.className = "polnation-search-results";
+      results.innerHTML = '<a class="polnation-search-result" href="' + polnationUrl + '"><img src="' + polnationLogo + '" alt="Polnation"><span>Polnation</span></a>';
+      container.appendChild(results);
+    }
+
+    const update = () => {
+      const query = normalize(input.value);
+      const matched = query.length > 0 && "polnation".includes(query);
+      results.classList.toggle("is-visible", matched);
+    };
+
+    input.addEventListener("input", update);
+    input.addEventListener("focus", update);
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      const query = normalize(input.value);
+      if (!query || !"polnation".includes(query)) return;
+      event.preventDefault();
+      window.location.href = polnationUrl;
+    });
+    document.addEventListener("click", (event) => {
+      if (container.contains(event.target)) return;
+      results.classList.remove("is-visible");
+    });
+    update();
+  };
   const render = () => {
     const next = pick();
     if (next === active) return;
     active = next;
     style.textContent = document.getElementById(next.replace("snapshot", "css")).content.textContent;
     root.innerHTML = document.getElementById(next).innerHTML;
+    wirePolnationSearch();
   };
   render();
   root.addEventListener("click", (event) => {
